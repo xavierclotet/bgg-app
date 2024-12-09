@@ -1,0 +1,30 @@
+
+
+<h2>Collection by {{ user() }} with {{ store.ownedCount()}} boardgames</h2>
+ 
+<div class="collection-grid">
+   @defer (when store.collection().length; on viewport; prefetch on idle) {
+        <ul>
+            @for (boardgame of store.getOwned(); let i = $index; track boardgame.name) {
+                @defer (on viewport) {
+                    <li (click)="navigateToBgg(boardgame.gameId)"> 
+                        {{i+1}}- {{ boardgame.name }} 
+                        @if(boardgame.isExpansion) {
+                            (expansion)
+                        }
+                    </li>
+                } @placeholder {
+                    <div>Loading...</div>
+                  }
+   
+            } 
+        </ul>
+    }  @placeholder (minimum 500ms) {
+        <div class="placeholder">Loading...</div>
+    } @error {
+        <p>No se pudo cargar el componente grande.</p>
+    }
+     
+    
+</div>
+ 

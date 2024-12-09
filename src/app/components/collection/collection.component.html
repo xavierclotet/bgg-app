@@ -1,0 +1,23 @@
+<h2>Collection {{ user() }}</h2>
+<!-- status: {{ collectionResource.status()}} -->
+@if((collectionResource.isLoading())) {
+    <p>Loading...</p>
+}
+@else if(collectionResource.error()) {
+    <div class="g-error">
+        Error! {{ collectionResource.error() }}
+    </div>
+}
+@else if(collectionResource.hasValue()) {
+    
+    <ul>
+        @for (
+            collection of collectionResource.value();
+            track collection.gameId
+        ) {
+            <li>
+                <a href="##" (click)="navigateToBgg(collection.gameId)">{{ collection.name }}</a>
+            </li>
+        }
+    </ul>
+}
