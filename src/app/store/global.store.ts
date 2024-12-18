@@ -3,14 +3,18 @@ import { BoardGameCollection } from "@app/models"
 import { BggDataService } from "@app/services";
 import { patchState, signalStore, withComputed, withHooks, withMethods, withState } from "@ngrx/signals";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { exhaustMap, lastValueFrom, tap } from "rxjs";
+import { delay, exhaustMap, lastValueFrom, pipe, switchMap, tap } from "rxjs";
 
 type StoreState = {
     collection: BoardGameCollection[],
+    filteredCollection: BoardGameCollection[],
+    isLoading: boolean
 }
 
 const initialState: StoreState = {
     collection: [],
+    filteredCollection: [],
+    isLoading: false
 }
 
 const STORE_STATE = new InjectionToken<StoreState>('StoreState', {
@@ -30,28 +34,23 @@ const STORE_STATE = new InjectionToken<StoreState>('StoreState', {
         async loadCollectionByUser(user: string): Promise<void> {
           const collection = await lastValueFrom(bggDataService.getBoardgameCollection(user));
           this.updateCollection(collection);
-        }
-      /*   loadCollectionByuser:  rxMethod<string>(
-      
-        pipe(
+        },
+        rxLoad: rxMethod<string>(pipe(
           tap(() => patchState(store, { isLoading: true })),
-          exhaustMap((user) => bggDataService.getBoardgameCollection(user).pipe(
-            tap((collection) => {
-              patchState(store, collection, { isLoading: false})
- 
-            }),
-            catchError((error) => {
-              console.error('Error loading hotness:', error);
-              patchState(store, { isLoading: false })
-              return [];
-            })
-          )), */
- 
+          switchMap((user) => bggDataService.getBoardgameCollection(user)),
+          tap((collection) => {
+            patchState(store, {collection, filteredCollection: collection}, { isLoading: false})
+          }),
+        )),
+        filterByTerm(term:string) {
+            const filteredCollection = store.collection().filter(game => game.owned).filter(game => game.name.toLowerCase().includes(term.toLowerCase()));
+            patchState(store, {filteredCollection});
+        }
     })),
-    withComputed(({collection}) =>({
+    withComputed(({collection, filteredCollection}) =>({
       collectionCount: computed(() => collection().length),
-      ownedCount: computed(() => collection().filter(game => game.owned).length),
-      getOwned: computed(() => collection().filter(game => game.owned))
+      ownedCount: computed(() => filteredCollection().filter(game => game.owned).length),
+      getOwned: computed(() => filteredCollection().filter(game => game.owned))
     })),
    
 );
