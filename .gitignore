@@ -45,3 +45,6 @@ Thumbs.db
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Package lock file
+package-lock.json
